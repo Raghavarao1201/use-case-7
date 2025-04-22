@@ -118,16 +118,19 @@ jobs:
         working-directory: ./
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
  
+       
       - name: Get EKS Cluster Name from Output
-        id: get_eks_cluster_name
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          # Assuming your Terraform output for the EKS cluster name is named 'cluster_name'
-          CLUSTER_NAME=$(terraform output -raw cluster_name)
-          echo "cluster_name=$CLUSTER_NAME" >> $GITHUB_OUTPUT
-        working-directory: ./
-        outputs:
-          cluster_name: ${{ steps.get_eks_cluster_name.outputs.cluster_name }}
+        id: get_eks_cluster_name
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "Retrieving EKS cluster name..."
+          CLUSTER_NAME=$(terraform output -raw cluster_name)
+          echo "Cluster name: $CLUSTER_NAME"
+          echo "cluster_name=${CLUSTER_NAME}" >> $GITHUB_OUTPUT
+        working-directory: ./
+        outputs:
+          cluster_name: ${{ steps.get_eks_cluster_name.outputs.cluster_name }}
+
  
       # EKS Deployment Steps
       - name: Set up kubectl
@@ -151,6 +154,6 @@ jobs:
           kubectl apply -f service-account.yml
           kubectl apply -f appointment-deployment.yml
           kubectl apply -f appointment-service.yml
-          ubectl apply -f patient-deployment.yml
+          kubectl apply -f patient-deployment.yml
           kubectl apply -f patient-service.yml
         working-directory: ./
