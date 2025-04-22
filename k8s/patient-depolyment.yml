@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patient-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: patient-app
+  template:
+    metadata:
+      labels:
+        app: patient-app
+    spec:
+      serviceAccountName: ecr-puller
+      containers:
+        - name: patient-service
+          image: 154767946691.dkr.ecr.us-east-1.amazonaws.com/patient:patient
+          ports:
+            - containerPort: 3000
+      imagePullSecrets:
+        - name: ecr-pull-secret
