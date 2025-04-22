@@ -5,10 +5,7 @@ terraform {
       version = "~> 5.0"
     }
   }
-}
-
-provider "aws" {
-  region = "us-east-1"
+  required_version = ">= 1.11.4"
 }
 
 data "aws_caller_identity" "current" {}
