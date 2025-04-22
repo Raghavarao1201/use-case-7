@@ -135,10 +135,9 @@ jobs:
       - name: Deploy to EKS
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          cd k8s/
           kubectl apply -f service-account.yml
           kubectl apply -f appointment-deployment.yml
           kubectl apply -f appointment-service.yml
           kubectl apply -f patient-deployment.yml
           kubectl apply -f patient-service.yml
-        working-directory: ./
+        working-directory: ./k8s
