@@ -17,6 +17,9 @@ jobs:
     name: Terraform Actions with Linting and Security
     runs-on: ubuntu-latest
 
+    outputs:
+      cluster_name: ${{ steps.get_eks_cluster_name.outputs.cluster_name }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -127,31 +130,28 @@ jobs:
           echo "Cluster name: $CLUSTER_NAME"
           echo "cluster_name=${CLUSTER_NAME}" >> $GITHUB_OUTPUT
         working-directory: ./
-        outputs:
-          cluster_name: ${{ steps.get_eks_cluster_name.outputs.cluster_name }}
-
-      # EKS Deployment Steps
+      
       - name: Set up kubectl
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: kubernetes-actions/setup-kubectl@v3
-        with:
-          install-location: '/usr/local/bin'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: kubernetes-actions/setup-kubectl@v3
+        with:
+          install-location: '/usr/local/bin'
 
-      - name: Update kubeconfig
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          aws eks update-kubeconfig --name "${{ steps.get_eks_cluster_name.outputs.cluster_name }}" --region "${{ secrets.AWS_REGION }}" --kubeconfig ~/.kube/config
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Update kubeconfig
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          aws eks update-kubeconfig --name "${{ steps.get_eks_cluster_name.outputs.cluster_name }}" --region "${{ secrets.AWS_REGION }}" --kubeconfig ~/.kube/config
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Deploy to EKS
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          cd k8s/
-          kubectl apply -f service-account.yml
-          kubectl apply -f appointment-deployment.yml
-          kubectl apply -f appointment-service.yml
-          kubectl apply -f patient-deployment.yml
-          kubectl apply -f patient-service.yml
-        working-directory: ./
+      - name: Deploy to EKS
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          cd k8s/
+          kubectl apply -f service-account.yml
+          kubectl apply -f appointment-deployment.yml
+          kubectl apply -f appointment-service.yml
+          kubectl apply -f patient-deployment.yml
+          kubectl apply -f patient-service.yml
+        working-directory: ./
