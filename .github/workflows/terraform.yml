@@ -62,7 +62,7 @@ jobs:
 
       - name: Generate Terraform Plan
         id: plan
-        run: terraform plan -no-color -lock=false > plan.txt
+        run: terraform plan -lock=false > plan.txt
         working-directory: ./
 
       - name: Create Plan Output Text File
