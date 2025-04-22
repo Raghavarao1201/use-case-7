@@ -8,30 +8,22 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-1" n
+  region = "us-east-1"
 }
+
 
 module "vpc" {
   source = "./modules/vpc"
-  vpc_id = aws_vpc.test_vpc.id
-  public_subnet_ids = [
-    aws_subnet.public_subnet_1.id,
-    aws_subnet.public_subnet_2.id,
-  ]
-  private_subnet_ids = [
-    aws_subnet.private_subnet_1.id,
-    aws_subnet.private_subnet_2.id,
-  ]
 }
 
 module "iam" {
   source = "./modules/iam"
-  cluster_name = "my-eks-cluster" # You can change this
+  cluster_name = "health-eks-cluster"
 }
 
 module "eks" {
   source = "./modules/eks"
-  cluster_name = module.iam.cluster_name
+  cluster_name = var.cluster_name
   vpc_id = module.vpc.vpc_id
   public_subnet_ids = module.vpc.public_subnet_ids
   private_subnet_ids = module.vpc.private_subnet_ids
