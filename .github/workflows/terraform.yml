@@ -1,68 +1,67 @@
 name: Terraform usecase7
- 
+
 on:
   push:
     branches:
       - main
   pull_request:
     types: [opened, synchronize]
- 
+
 permissions:
   id-token: write
   pull-requests: write
   contents: write
- 
+
 jobs:
   terraform:
     name: Terraform Actions with Linting and Security
- 
     runs-on: ubuntu-latest
- 
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
- 
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_IAM_ROLE }}
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: GithubActionsTerraform
- 
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2.0.3
         with:
-          terraform_version: ">= 1.11.4"
- 
+          terraform_version: "1.3.0"
+
       # TFlint Integration
       - name: Install TFlint
         run: |
-          wget https://github.com/terraform-linters/tflint/releases/download/v0.50.2/tflint_linux_amd64.zip 
+          wget https://github.com/terraform-linters/tflint/releases/download/v0.50.2/tflint_linux_amd64.zip
           unzip tflint_linux_amd64.zip
           sudo mv tflint /usr/local/bin/
           tflint --version
- 
+
       - name: Run TFlint
         id: tflint
         run: tflint --init && tflint -f compact
         working-directory: ./
- 
+
       # Terraform Steps
       - name: Initialize Terraform
         id: init
         run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" -backend-config="key=terraform.tfstate" -backend-config="region=${{ secrets.AWS_REGION }}"
         working-directory: ./
- 
+
       - name: Validate Terraform
         id: validate
         run: terraform validate
         working-directory: ./
- 
+
       - name: Generate Terraform Plan
         id: plan
         run: terraform plan -no-color -lock=false > plan.txt
         working-directory: ./
- 
+
       - name: Create Plan Output Text File
         id: plan_report
         run: |
@@ -73,6 +72,7 @@ jobs:
           echo "## Terraform Plan Output" >> reports/report.txt
           cat plan.txt >> reports/report.txt
         working-directory: ./
+
       - name: Commit and push the report
         run: |
           git config --global user.name "Raghavarao1201"
@@ -83,18 +83,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: ./
- 
+
       # Checkov Integration
       - name: Install Checkov
         run: |
           pip3 install --upgrade pip
           pip3 install checkov
- 
+
       - name: Run Checkov
         id: checkov
         run: checkov -d . --framework terraform --soft-fail
         working-directory: ./
- 
+
       - name: Comment Plan to Pull Request
         uses: actions/github-script@v7
         if: github.event_name == 'pull_request'
@@ -111,34 +111,32 @@ jobs:
               issue_number: context.event.pull_request.number,
               body: planOutput
             });
- 
+
       - name: Apply Terraform
         id: apply
-        run: terraform apply -auto-approve -lock=false
+        run: terraform apply -auto-approve -lock=false -no-color
         working-directory: ./
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
- 
-       
-      - name: Get EKS Cluster Name from Output
-        id: get_eks_cluster_name
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          echo "Retrieving EKS cluster name..."
-          CLUSTER_NAME=$(terraform output -raw cluster_name)
-          echo "Cluster name: $CLUSTER_NAME"
-          echo "cluster_name=${CLUSTER_NAME}" >> $GITHUB_OUTPUT
-        working-directory: ./
-        outputs:
-          cluster_name: ${{ steps.get_eks_cluster_name.outputs.cluster_name }}
 
- 
+      - name: Get EKS Cluster Name from Output
+        id: get_eks_cluster_name
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "Retrieving EKS cluster name..."
+          CLUSTER_NAME=$(terraform output -raw cluster_name)
+          echo "Cluster name: $CLUSTER_NAME"
+          echo "cluster_name=${CLUSTER_NAME}" >> $GITHUB_OUTPUT
+        working-directory: ./
+        outputs:
+          cluster_name: ${{ steps.get_eks_cluster_name.outputs.cluster_name }}
+
       # EKS Deployment Steps
       - name: Set up kubectl
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: kubernetes-actions/setup-kubectl@v3
         with:
           install-location: '/usr/local/bin'
- 
+
       - name: Update kubeconfig
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
@@ -146,7 +144,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
- 
+
       - name: Deploy to EKS
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
