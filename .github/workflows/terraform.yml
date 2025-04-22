@@ -34,7 +34,7 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2.0.3
         with:
-          terraform_version: "1.11.4"
+          terraform_version: "1.3.0"
 
       # TFlint Integration
       - name: Install TFlint
@@ -43,6 +43,7 @@ jobs:
           unzip tflint_linux_amd64.zip
           sudo mv tflint /usr/local/bin/
           tflint --version
+        working-directory: ./
 
       - name: Run TFlint
         id: tflint
@@ -74,7 +75,7 @@ jobs:
           echo "" >> reports/report.txt
           echo "## Terraform Plan Output" >> reports/report.txt
           cat plan.txt >> reports/report.txt
-        working-directory: ./terraform
+        working-directory: ./
 
       - name: Commit and push the report
         run: |
@@ -85,7 +86,7 @@ jobs:
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: ./terraform
+        working-directory: ./
 
       # Checkov Integration
       - name: Install Checkov
@@ -95,8 +96,8 @@ jobs:
 
       - name: Run Checkov
         id: checkov
-        run: checkov -d . --framework terraform --soft-fail
-        working-directory: ./terraform
+        run: checkov -d ./terraform --framework terraform --soft-fail
+        working-directory: ./
 
       - name: Comment Plan to Pull Request
         uses: actions/github-script@v7
@@ -126,10 +127,16 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo "Retrieving EKS cluster name..."
+          pwd
+          ls -al .terraform*
+          terraform state list
+          terraform output
           CLUSTER_NAME=$(terraform output -raw cluster_name)
-          echo "Cluster name: $CLUSTER_NAME"
+          echo "Cluster name (after output -raw): $CLUSTER_NAME"
           echo "cluster_name=${CLUSTER_NAME}" >> $GITHUB_OUTPUT
         working-directory: ./terraform
+        outputs:
+          cluster_name: ${{ env.CLUSTER_NAME }} # Keeping this for now, will correct later if needed
 
       - name: Set up kubectl
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
