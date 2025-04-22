@@ -11,14 +11,17 @@ provider "aws" {
   region = "us-east-1"
 }
 
+data "aws_caller_identity" "current" {}
 
 module "vpc" {
   source = "./modules/vpc"
 }
 
 module "iam" {
-  source = "./modules/iam"
-  cluster_name = "health-eks-cluster"
+  source             = "./modules/iam"
+  cluster_name       = var.cluster_name
+  eks_cluster_oidc_issuer = module.eks.cluster_identity_oidc_issuer
+  aws_account_id     = data.aws_caller_identity.current.account_id
 }
 
 module "eks" {

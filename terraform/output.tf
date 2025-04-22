@@ -23,3 +23,8 @@ output "kubeconfig" {
   sensitive = true
   description = "Kubernetes configuration to access the EKS cluster."
 }
+
+output "ecr_puller_role_arn" {
+  value       = module.iam.ecr_puller_sa_role_arn
+  description = "ARN of the IAM role for ECR pulling."
+}

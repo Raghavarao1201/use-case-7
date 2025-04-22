@@ -36,3 +36,13 @@ KUBECONFIG
   sensitive = true
   description = "Kubernetes configuration to access the EKS cluster."
 }
+
+output "cluster_identity_oidc_issuer" {
+  value = aws_eks_cluster.eks_cluster.identity[0].oidc[0].issuer
+  description = "The OIDC issuer URL for the EKS cluster."
+}
+
+output "fargate_security_group_id" {
+  value = aws_security_group.fargate_sg.id
+  description = "The ID of the security group for Fargate pods."
+}
