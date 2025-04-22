@@ -133,7 +133,7 @@ jobs:
 
       - name: Set up kubectl
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: kubernetes-actions/setup-kubectl@v3
+        uses: Azure/setup-kubectl@v4.0.0
         with:
           install-location: '/usr/local/bin'
 
