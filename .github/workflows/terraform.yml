@@ -132,12 +132,21 @@ jobs:
         run: |
           aws eks update-kubeconfig --name health-eks-cluster --region "${{ secrets.AWS_REGION }}"
 
+      - name: Create ECR Pull Secret
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | kubectl create secret docker-registry ecr-pull-secret \
+            --docker-server=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com \
+            --docker-username=AWS \
+            --docker-password=-
+        working-directory: ./k8s
+
       - name: Deploy to EKS
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           kubectl apply -f service-account.yml
           kubectl apply -f appointment-deployment.yml
           kubectl apply -f appointment-service.yml
-          kubectl apply -f patient-deployment.yml
+          kubectl apply -f patient-depolyment.yml
           kubectl apply -f patient-service.yml
         working-directory: ./k8s
