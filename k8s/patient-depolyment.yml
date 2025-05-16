@@ -15,7 +15,7 @@ spec:
       serviceAccountName: ecr-puller
       containers:
         - name: patient-service
-          image: 154767946691.dkr.ecr.us-east-1.amazonaws.com/patient:patient
+          image: 154767946691.dkr.ecr.us-east-1.amazonaws.com/eks-repo:patient
           ports:
             - containerPort: 3000
       imagePullSecrets:

@@ -7,6 +7,6 @@ spec:
     app: appointment-app
   ports:
     - protocol: TCP
-      port: 3001
+      port: 80
       targetPort: 3001
-  type: LoadBalancer
+  type: ClusterIP

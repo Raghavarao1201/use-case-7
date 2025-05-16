@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress
+  annotations:
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/load-balancer-name: my-fargate-alb
+spec:
+  ingressClassName: alb
+  rules: 
+    - http:
+        paths:
+          - path: /app-a
+            pathType: Prefix
+            backend:
+              service:
+                name: app-a
+                port:
+                  number: 80
+          - path: /app-b
+            pathType: Prefix
+            backend:
+              service:
+                name: app-b
+                port:
+                  number: 80
+            
